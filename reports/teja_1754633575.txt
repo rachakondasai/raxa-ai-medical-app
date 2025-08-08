@@ -1,0 +1,130 @@
+Knowledge Transfer: Infrastructure Automation with Terraform, Terragrunt, and GitHub Actions
+1. What is Terraform?
+- Terraform is an open-source Infrastructure as Code (IaC) tool for defining and provisioning cloud
+infrastructure using code.
+- It allows you to create, update, and manage resources (like VPCs, ECS clusters, IAM roles) declaratively-no
+manual AWS console work.
+2. What is Terragrunt?
+- Terragrunt is a thin wrapper for Terraform.
+- It adds features for: Code reuse (DRY), Managing environment-specific variables, Simplifying remote state
+management, Handling dependencies between modules, Easier management of multiple environments (qa,
+stage, prod).
+3. How Do We Use Both in Our Organization?
+A. Modular and Environment-Driven Structure
+- Terraform modules live in a shared repo and define reusable blueprints (e.g., VPC, ECS, ALB).
+- Terragrunt scripts: Pull in these modules, Inject environment-specific values, Handle dependencies,
+Manage state and provider config via inheritance.
+Our Folder Structure:
+PIMS-CLOUDOPS/
+ infra-ecs-pims/
+     environments/
+         prod/
+         qa/
+         ...
+             ecs/
+                 ecr-repos/
+                    pims/
+                        terragrunt.hcl
+                 ecs_cloudmap/
+                 ecs_cluster/
+                 vpclink/
+                 loadbalancers/
+                 networksuite/
+                 pimsservices/
+                     api-broker/
+                     data-hub/
+                     user-management/
+                        terragrunt.hcl
+                     ...
+- Each environment (prod, qa, etc.) is separate.
+- Each major infra/service block (e.g., vpc, ecs, loadbalancers, pimsservices) has its own folder and
+terragrunt.hcl.
+4. Sample Terragrunt Script - Explained
+include "root" {
+  path = find_in_parent_folders()
+}
+-> Inherit root config (like backend/provider) from parent files-keeps things DRY.
+terraform {
+  source = "git::https://github.com/bayer-int/shpf-iac-modules.git//modules/ecs_fargate"
+}
+-> Pulls in the ECS Fargate module from the shared repo.
+locals {
+  environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
+  environment_name = local.environment_vars.locals.environment_name
+  country_tag      = local.environment_vars.locals.service_name
+  name_prefix      = local.environment_vars.locals.name_prefix
+  name = "${local.name_prefix}-${local.environment_name}-${basename(get_terragrunt_dir())}"
+  aws_region  = local.environment_vars.locals.aws_region
+}
+-> Loads all env-specific variables from env.hcl (no hardcoding).
+-> Sets up names and tags for standardization.
+Dependencies Section
+dependency "ecs_cluster" { ... }
+dependency "ecs_cloudmap" { ... }
+dependency "vpc" { ... }
+dependency "iam" { ... }
+dependency "nlb" { ... }
+dependency "ecr_repo" { ... }
+-> Wires up this service to required infra (network, cluster, IAM, load balancer, ECR).
+Inputs Section
+inputs = {
+  cluster_arn = dependency.ecs_cluster.outputs.arn
+  # ...other outputs and locals...
+  container_environment = [
+    { name = "SPRING_PROFILES_ACTIVE", value = "qa" },
+    { name = "PORT", value = "8058" }
+  ]
+  # ...other inputs...
+}
+-> Passes all needed values to the module, using dependencies and local vars.
+- Why Cloud Map? ECS Cloud Map lets services discover and talk to each other (service-to-service
+discovery).
+- Why Network Suite? Ensures all resources are in the correct VPC/subnets, maintaining security and
+isolation.
+5. How Is This All Automated? (GitHub Actions)
+A. Overview of the Workflow
+- The Terragrunt Infra Setup workflow lets users:
+  - Pick the environment (qa, stage, prod),
+  - Choose whether to deploy the complete suite, only specific components, or just selected pims services,
+  - Select the action (apply or destroy).
+B. What Does the Workflow Do?
+1. Installs the required Terraform and Terragrunt versions.
+2. Fetches secrets/credentials securely from Vault.
+3. Configures AWS credentials for the session.
+4. Runs: terragrunt run-all plan (shows what will change), Waits for manual approval, Then apply or destroy
+as requested.
+5. Handles the right directories automatically for full suite, component, or service-level runs.
+6. Ensures order by using Terragrunt's built-in dependency management.
+C. Deployment Order - Why It Matters
+1. Network components (VPC, subnets, security groups) must exist first.
+2. Shared infrastructure (IAM, ECR, Load Balancer, ECS Cluster, Cloud Map) comes next.
+3. Microservices (e.g., user-management) are deployed last, as they depend on all the above.
+Why this order? Microservices need the network, cluster, IAM, and load balancer already in place. Cloud Map
+enables service discovery between deployed containers.
+D. Diagram: How Everything Connects
+[Team Member]
+     |
+   (Workflow Inputs)
+     |
+[GitHub Actions Workflow]
+     |
+   (Install Tools, Import Secrets)
+     |
+   (Plan Infra, Request Approval)
+     |
+   (Apply/Destroy Infra)
+     |
+[Terragrunt]
+     |
+(Reads env files, links dependencies)
+     |
+[Terraform Modules]
+     |
+   (Provision resources)
+     |
+[AWS Cloud]
+E. Summary for Your Team
+"We define all our infrastructure as code using reusable Terraform modules, and orchestrate everything with
+Terragrunt, which manages environment config and dependencies. Our deployments are fully automated and
+safe using GitHub Actions, with manual approval and precise targeting of environments, components, or
+microservices. This keeps our infrastructure consistent, secure, and easy to manage as we scale."

@@ -31,3 +31,40 @@ def analyze_text(text):
         return "⏳ Analysis timed out. Please try with a shorter report."
     except Exception as e:
         return f"🔥 Unexpected error: {str(e)}"
+
+import requests
+
+def get_user_location():
+    try:
+        res = requests.get("https://ipinfo.io/json?token=c7376765bc398d344b7e666fb4027adb288b40e2e4feadc5bcdb600c4a196d3f")
+        data = res.json()
+        return data.get("city", ""), data.get("region", ""), data.get("country", "")
+    except:
+        return "", "", ""
+
+def search_doctors_online(specialty, city, api_key):
+    from serpapi import GoogleSearch
+
+    query = f"Top rated {specialty} doctors in {city}"
+
+    search = GoogleSearch({
+        "q": query,
+        "location": city,
+        "hl": "en",
+        "gl": "in",
+        "api_key": api_key
+    })
+
+    results = search.get_dict()
+    local_results = results.get("local_results", {}).get("places", [])
+
+    doctors = []
+    for place in local_results:
+        doctors.append({
+            "name": place.get("title"),
+            "address": place.get("address"),
+            "rating": place.get("rating"),
+            "reviews": place.get("reviews"),
+            "link": place.get("link")
+        })
+    return doctors

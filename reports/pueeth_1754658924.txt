@@ -1,0 +1,78 @@
+Health Report Summary - R Sai Prasad
+Key Abnormal Findings:
+Category
+Parameter
+Result
+Normal Range
+Inflammation
+HS-CRP
+4.7 mg/L
+< 3 (High Risk)
+Blood
+Hematocrit (PCV)
+51.2%
+4050%
+Blood
+MCHC
+30.3 g/dL
+31.534.5
+Blood
+Monocytes
+1.6%
+210%
+Blood
+RBC Count
+5.75 M/L
+4.55.5
+Diabetes
+Fasting Glucose
+100.8 mg/dL
+70100
+Lipids
+HDL
+33 mg/dL
+4060
+Lipids
+LDL
+127.8 mg/dL
+< 100
+Lipids
+Triglycerides
+240 mg/dL
+< 150
+Lipids
+HDL/LDL Ratio
+0.26
+> 0.4
+Liver
+SGPT
+45.4 U/L
+< 45
+Liver
+Serum Globulin
+3.59 g/dL
+2.53.4
+Kidney
+Uric Acid
+10.8 mg/dL
+4.27.3
+Vitamins
+Vitamin D
+16.02 ng/mL
+30100
+Toxic Elements
+Beryllium
+0.05 g/L
+0.100.80
+Overall Good Indicators:
+- Vitamin B12, A, E, K, B1B7: Within healthy range
+- CEA (Cancer Marker): Normal
+- Iron & Hemoglobin: Normal
+- Kidney, Liver, and Pancreatic enzymes: Mostly normal
+Suggestions:
+- Recheck HS-CRP after 2 weeks to rule out non-cardiac inflammation.
+- Improve HDL, reduce LDL & triglycerides via diet, exercise, or meds.
+- Increase Vitamin D: Sun exposure or supplements.
+- Monitor pre-diabetic glucose  healthy eating & regular exercise.
+- Reduce uric acid: Avoid red meat, beer; consult if symptoms appear.
+Page 1 | Generated on 05-Aug-2025
